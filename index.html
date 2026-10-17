@@ -956,7 +956,8 @@ html[dir="rtl"] .chart-x-labels span { transform:translateX(50%); }
   function applyURLStudent() {
     const p = new URLSearchParams(window.location.search).get('student');
     if (!p || !studentsData.length) return false;
-    const idx = studentsData.findIndex(s => s.name === p);
+    const target = p.trim().toLowerCase();
+    const idx = studentsData.findIndex(s => s.name.trim().toLowerCase() === target);
     if (idx === -1) return false;
     selectEl.value = String(idx);
     selectStudent(idx, false);
