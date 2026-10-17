@@ -709,8 +709,9 @@ html[dir="rtl"] .chart-x-labels span { transform:translateX(50%); }
   }
 
   // ── CONFIG ───────────────────────────────────────────────────
-  const SHEET_ID   = '1meMkeHabfqzK5ganAY72KYFoBjnvuOXQRGu2dpc0ycM';
+  const SHEET_ID   = '1CcudM6UbwRQK8Ro3wHg6j9aHhvYGyCqt3gzl4JSTBJU';
   const SHEET_NAME = 'Summary';
+  const PUB_CSV_URL= 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT8W41DE4DKDZyr0Jslr-Uhp_AWYVx4UCB7hb8rxnk-8K_Tno9De92piVbrwv0_nFEIbga3K8Apd4F6/pub?gid=410744778&single=true&output=csv';
   const CSV_URL    = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_NAME)}`;
 
   // ── STATE ────────────────────────────────────────────────────
@@ -866,11 +867,24 @@ html[dir="rtl"] .chart-x-labels span { transform:translateX(50%); }
         const table = await fetchJSONP(SHEET_ID, SHEET_NAME);
         rows = tableToRows(table);
       } catch (e) {
-        console.warn('JSONP failed, trying CSV:', e.message);
-        const url = isRefresh ? CSV_URL+'&_='+Date.now() : CSV_URL;
-        const res = await fetch(url, {cache: isRefresh?'reload':'default'});
-        if (!res.ok) throw new Error(`HTTP ${res.status} – ${res.statusText}`);
-        rows = parseCSV(await res.text());
+        console.warn('JSONP failed, trying CSV fallback:', e.message);
+        let csvText = '';
+        if (PUB_CSV_URL) {
+          try {
+            const pubUrl = isRefresh ? PUB_CSV_URL + '&_=' + Date.now() : PUB_CSV_URL;
+            const res = await fetch(pubUrl, { cache: isRefresh ? 'reload' : 'default' });
+            if (res.ok) csvText = await res.text();
+          } catch (pubErr) {
+            console.warn('PUB_CSV_URL fetch error, trying CSV_URL:', pubErr);
+          }
+        }
+        if (!csvText) {
+          const url = isRefresh ? CSV_URL + '&_=' + Date.now() : CSV_URL;
+          const res = await fetch(url, { cache: isRefresh ? 'reload' : 'default' });
+          if (!res.ok) throw new Error(`HTTP ${res.status} – ${res.statusText}`);
+          csvText = await res.text();
+        }
+        rows = parseCSV(csvText);
       }
       studentsData = mapRows(rows);
       if (studentsData.length === 0) { showMsg('error','No students found. Check your Summary tab has data and headers.'); return; }
