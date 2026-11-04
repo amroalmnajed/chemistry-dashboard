@@ -270,7 +270,7 @@ select:focus-visible, .student-search:focus-visible {
 .weekly-card { padding:26px 28px; border-radius:24px; margin-bottom:24px; }
 .weekly-divider { height:0; border-top:1px dashed var(--line); margin:20px 0; }
 .weekly-section-title { display:flex; align-items:center; gap:8px; font-size:15px; font-weight:800; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted); margin-bottom:14px; }
-.weekly-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.weekly-grid { display:grid; grid-template-columns:1fr; gap:16px; }
 .weekly-item { background:rgba(128,128,128,0.055); border:1px solid var(--line-faint); border-radius:16px; padding:16px 18px; }
 .weekly-item-title { font-size:13px; font-weight:800; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); margin-bottom:12px; }
 .weekly-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:6px 0; font-size:16px; }
@@ -369,7 +369,6 @@ tbody tr:last-child td { border-bottom:none; }
   .stat-value { font-size:32px; }
   .card, .hw-progress-card { padding:20px; }
   .weekly-card { padding:20px; }
-  .weekly-grid { grid-template-columns:1fr; }
   .hw-progress-grid { grid-template-columns:1fr; gap:16px; }
   .export-btn-row { flex-direction:column; }
 }
@@ -480,25 +479,19 @@ tbody tr:last-child td { border-bottom:none; }
       </div>
     </div>
 
-    <!-- ══ WEEKLY REPORT ══ -->
+    <!-- ══ WEEKLY REPORT (Grade 9: 1 session · 1 homework) ══ -->
     <div class="weekly-card glass">
       <div class="card-title">Weekly Report</div>
-      <div class="card-subtitle">Latest sessions &amp; homework</div>
+      <div class="card-subtitle">Latest session &amp; homework</div>
 
       <div class="weekly-section">
         <div class="weekly-section-title">Attendance</div>
         <div class="weekly-grid">
           <div class="weekly-item">
-            <div class="weekly-item-title">Session 1</div>
+            <div class="weekly-item-title" id="wrS1Title">Session</div>
             <div class="weekly-row"><span>Session Number</span><strong id="wrS1Num">—</strong></div>
             <div class="weekly-row"><span>Group</span><strong id="wrS1Group">—</strong></div>
             <div class="weekly-row"><span>Status</span><span class="pill" id="wrS1Status">—</span></div>
-          </div>
-          <div class="weekly-item">
-            <div class="weekly-item-title">Session 2</div>
-            <div class="weekly-row"><span>Session Number</span><strong id="wrS2Num">—</strong></div>
-            <div class="weekly-row"><span>Group</span><strong id="wrS2Group">—</strong></div>
-            <div class="weekly-row"><span>Status</span><span class="pill" id="wrS2Status">—</span></div>
           </div>
         </div>
       </div>
@@ -509,14 +502,9 @@ tbody tr:last-child td { border-bottom:none; }
         <div class="weekly-section-title">Homework</div>
         <div class="weekly-grid">
           <div class="weekly-item">
-            <div class="weekly-item-title">Homework 1</div>
+            <div class="weekly-item-title" id="wrH1Title">Homework</div>
             <div class="weekly-row"><span>HW Number</span><strong id="wrH1Num">—</strong></div>
             <div class="weekly-row"><span>Submission Status</span><span class="pill" id="wrH1Status">—</span></div>
-          </div>
-          <div class="weekly-item">
-            <div class="weekly-item-title">Homework 2</div>
-            <div class="weekly-row"><span>HW Number</span><strong id="wrH2Num">—</strong></div>
-            <div class="weekly-row"><span>Submission Status</span><span class="pill" id="wrH2Status">—</span></div>
           </div>
         </div>
       </div>
@@ -702,7 +690,7 @@ tbody tr:last-child td { border-bottom:none; }
     ss('dashTheme', theme);
   }
 
-  // ── CONFIG (Grade 10) ─────────────────────────────────────────
+  // ── CONFIG (Grade 9) ─────────────────────────────────────────
   const SHEET_ID   = '1CcudM6UbwRQK8Ro3wHg6j9aHhvYGyCqt3gzl4JSTBJU';
   const SHEET_NAME = 'Summary';
   const PUB_CSV_URL= 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT8W41DE4DKDZyr0Jslr-Uhp_AWYVx4UCB7hb8rxnk-8K_Tno9De92piVbrwv0_nFEIbga3K8Apd4F6/pub?gid=1039040508&single=true&output=csv';
@@ -716,6 +704,8 @@ tbody tr:last-child td { border-bottom:none; }
   let detectedQuizCount = 0;
   let validQuizCount    = 0;
   let lastQuizRows      = [];
+  let latestSessionIdx  = 1;
+  let latestHomeworkIdx = 1;
 
   // ── DOM REFS ─────────────────────────────────────────────────
   const selectEl    = document.getElementById('studentSelect');
@@ -740,17 +730,7 @@ tbody tr:last-child td { border-bottom:none; }
     hwMissing:['hwmissing','homeworkmissing','missinghw','missinghomework'],
     hwNotComplete:['hwnotcomplete','homeworknotcomplete','hwnotcompleted','homeworknotcompleted'],
     note:['note','notes','comment','comments','teachernote'],
-    code:['code','studentcode','studentid','studentno','id','rollno','rollnumber'],
-    s1num:['session1number','session1no','session1num','s1number','s1num','session1','s1'],
-    s1group:['session1group','s1group','group1'],
-    s1status:['session1status','s1status','session1attendance','s1attendance','status1'],
-    s2num:['session2number','session2no','session2num','s2number','s2num','session2','s2'],
-    s2group:['session2group','s2group','group2'],
-    s2status:['session2status','s2status','session2attendance','s2attendance','status2'],
-    h1num:['homework1number','homework1no','hw1number','hw1no','hw1','homework1','h1number','h1num'],
-    h1status:['homework1status','hw1status','homework1submission','hw1submission','h1status','h1submission'],
-    h2num:['homework2number','homework2no','hw2number','hw2no','hw2','homework2','h2number','h2num'],
-    h2status:['homework2status','hw2status','homework2submission','hw2submission','h2status','h2submission']
+    code:['code','studentcode','studentid','studentno','id','rollno','rollnumber']
   };
   function getField(obj, aliases) {
     for (const key in obj) { if (aliases.includes(normalizeKey(key))) return obj[key]; }
@@ -760,6 +740,50 @@ tbody tr:last-child td { border-bottom:none; }
     const tgts = [`q${n}${kind}`, `quiz${n}${kind}`];
     for (const key in obj) { if (tgts.includes(normalizeKey(key))) return obj[key]; }
     return '';
+  }
+
+  // ── WEEKLY (SESSION / HOMEWORK) COLUMN DISCOVERY ─────────────
+  // Scans the header row for numbered session / homework blocks, e.g.
+  //   Session 1 Number / Group / Status … Session 7 …
+  //   HW 1 Number / Status … HW 6 …
+  // so the dashboard always shows the newest block that actually has data.
+  function detectIndices(headers, prefixes) {
+    const re = new RegExp('^(?:' + prefixes.join('|') + ')(\\d+)(?:number|no|num|group|status|attendance|submission)?$');
+    let max = 0;
+    headers.forEach(h => {
+      const m = normalizeKey(h).match(re);
+      if (m) { const n = Number(m[1]); if (n > max) max = n; }
+    });
+    return max;
+  }
+
+  function sessionAliases(n, kind) {
+    if (!n) { // no numbered columns at all — bare "Session Number / Group / Status"
+      if (kind === 'num')   return ['sessionnumber','sessionno','sessionnum','session','sessionid'];
+      if (kind === 'group') return ['sessiongroup','group','groupname'];
+      return ['sessionstatus','sessionattendance','status','attendance'];
+    }
+    const b = ['session' + n, 's' + n];
+    if (kind === 'num')
+      return b.flatMap(x => [x+'number', x+'no', x+'num'])
+              .concat(b, ['sessionnumber','sessionno','sessionnum','session']);
+    if (kind === 'group')
+      return b.map(x => x+'group').concat(['group'+n, 'sessiongroup','group']);
+    return b.flatMap(x => [x+'status', x+'attendance'])
+            .concat(['status'+n, 'sessionstatus','sessionattendance']);
+  }
+
+  function homeworkAliases(n, kind) {
+    if (!n) {
+      if (kind === 'num') return ['homeworknumber','homeworkno','homeworknum','hwnumber','hwno','hw','homework'];
+      return ['homeworkstatus','hwstatus','homeworksubmission','hwsubmission'];
+    }
+    const b = ['homework' + n, 'hw' + n, 'h' + n];
+    if (kind === 'num')
+      return b.flatMap(x => [x+'number', x+'no', x+'num'])
+              .concat(b, ['homeworknumber','hwnumber','homework','hw']);
+    return b.flatMap(x => [x+'status', x+'submission'])
+            .concat(['homeworkstatus','hwstatus','homeworksubmission','hwsubmission']);
   }
 
   // ── CSV PARSER ───────────────────────────────────────────────
@@ -805,16 +829,42 @@ tbody tr:last-child td { border-bottom:none; }
       const tgts=[`q${n}mark`,`q${n}max`,`quiz${n}mark`,`quiz${n}max`];
       if (headers.some(h=>tgts.includes(normalizeKey(h)))) detectedQuizCount=n; else break;
     }
+
+    // Discover how many session / homework blocks exist in the Summary tab
+    const sessionMax = detectIndices(headers, ['session','s']);
+    const hwMax      = detectIndices(headers, ['homework','hw','h']);
+    const sessionIdxList = sessionMax > 0 ? Array.from({length:sessionMax},(_,i)=>i+1) : [0];
+    const hwIdxList      = hwMax      > 0 ? Array.from({length:hwMax},     (_,i)=>i+1) : [0];
+
     for (let i=1;i<rows.length;i++) {
       const row=rows[i]; if(!row||row.length===0||!row[0]) continue;
       const obj={};
       headers.forEach((h,idx)=>{ obj[h]=(idx<row.length)?String(row[idx]||'').trim():''; });
+
       const quizzes=[];
       for (let n=1;n<=detectedQuizCount;n++) {
         const raw=findQuizField(obj,n,'mark'), max=Number(findQuizField(obj,n,'max'))||0, grade=findQuizField(obj,n,'grade');
         quizzes.push({num:n,name:`Quiz ${n}`,raw,max,grade});
         if (max>0) classQuizMax[`Quiz ${n}`]=Math.max(classQuizMax[`Quiz ${n}`]||0,max);
       }
+
+      // Read every session / homework block found in the header
+      const sessMap={};
+      sessionIdxList.forEach(n=>{
+        sessMap[n]={
+          num:    String(getField(obj, sessionAliases(n,'num'))    || '').trim(),
+          group:  String(getField(obj, sessionAliases(n,'group'))  || '').trim(),
+          status: String(getField(obj, sessionAliases(n,'status')) || '').trim()
+        };
+      });
+      const hwMap={};
+      hwIdxList.forEach(n=>{
+        hwMap[n]={
+          num:    String(getField(obj, homeworkAliases(n,'num'))    || '').trim(),
+          status: String(getField(obj, homeworkAliases(n,'status')) || '').trim()
+        };
+      });
+
       students.push({
         name: getField(obj,ALIASES.name)||'Unknown',
         present: Number(getField(obj,ALIASES.present))||0,
@@ -826,19 +876,37 @@ tbody tr:last-child td { border-bottom:none; }
         hwMissing: Number(getField(obj,ALIASES.hwMissing))||0,
         hwNotComplete: Number(getField(obj,ALIASES.hwNotComplete))||0,
         quizzes, sheetNote: getField(obj,ALIASES.note)||'',
-        code:     getField(obj,ALIASES.code)||'',
-        s1num:    getField(obj,ALIASES.s1num)||'',
-        s1group:  getField(obj,ALIASES.s1group)||'',
-        s1status: getField(obj,ALIASES.s1status)||'',
-        s2num:    getField(obj,ALIASES.s2num)||'',
-        s2group:  getField(obj,ALIASES.s2group)||'',
-        s2status: getField(obj,ALIASES.s2status)||'',
-        h1num:    getField(obj,ALIASES.h1num)||'',
-        h1status: getField(obj,ALIASES.h1status)||'',
-        h2num:    getField(obj,ALIASES.h2num)||'',
-        h2status: getField(obj,ALIASES.h2status)||''
+        code: getField(obj,ALIASES.code)||'',
+        _sess: sessMap, _hw: hwMap
       });
     }
+
+    // Pick the NEWEST session / homework block that actually contains data
+    function lastWithData(list, mapKey) {
+      let chosen = list[0];
+      list.forEach(n => {
+        const any = students.some(s => {
+          const v = s[mapKey] && s[mapKey][n];
+          return !!v && Object.keys(v).some(k => v[k] !== '');
+        });
+        if (any) chosen = n;
+      });
+      return chosen;
+    }
+    latestSessionIdx  = lastWithData(sessionIdxList, '_sess');
+    latestHomeworkIdx = lastWithData(hwIdxList, '_hw');
+
+    students.forEach(s => {
+      const sv = (s._sess && s._sess[latestSessionIdx]) || {};
+      const hv = (s._hw   && s._hw[latestHomeworkIdx])   || {};
+      s.s1num    = sv.num    || '';
+      s.s1group  = sv.group  || '';
+      s.s1status = sv.status || '';
+      s.h1num    = hv.num    || '';
+      s.h1status = hv.status || '';
+      delete s._sess; delete s._hw;
+    });
+
     validQuizCount=0;
     for (let n=1;n<=detectedQuizCount;n++) {
       if (students.some(s=>{const q=s.quizzes[n-1]; return q&&(q.max>0||isQuizTaken(q.raw));})) validQuizCount=n; else break;
@@ -960,10 +1028,9 @@ tbody tr:last-child td { border-bottom:none; }
         name,
         present: att.present, absent: att.absent, late: att.late, notComplete: att.notComplete,
         hwTotal: hw.total, hwDone: hw.done, hwMissing: hw.missing, hwNotComplete: hw.notComplete,
-        quizzes, sheetNote: '',
-        code:'', s1num:'', s1group:'', s1status:'',
-        s2num:'', s2group:'', s2status:'',
-        h1num:'', h1status:'', h2num:'', h2status:''
+        quizzes, sheetNote: '', code: '',
+        s1num:'', s1group:'', s1status:'',
+        h1num:'', h1status:''
       });
     }
 
@@ -1271,17 +1338,13 @@ tbody tr:last-child td { border-bottom:none; }
     el.textContent = v || '—';
   }
 
+  // Grade 9 → a single latest session and a single latest homework
   function renderWeeklyReport(s) {
     setText('wrS1Num', s.s1num);
     setText('wrS1Group', s.s1group);
     setPill(document.getElementById('wrS1Status'), s.s1status);
-    setText('wrS2Num', s.s2num);
-    setText('wrS2Group', s.s2group);
-    setPill(document.getElementById('wrS2Status'), s.s2status);
     setText('wrH1Num', s.h1num);
     setPill(document.getElementById('wrH1Status'), s.h1status);
-    setText('wrH2Num', s.h2num);
-    setPill(document.getElementById('wrH2Status'), s.h2status);
   }
 
   function selectStudent(index, pushState) {
